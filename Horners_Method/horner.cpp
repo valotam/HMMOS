@@ -33,7 +33,7 @@ int main()
   std::cout << "Set variable(e.g. t): ";
   std::cin >> variable;
   std::cout << "The result of Horner's Method is "
-            << Horner(pCoefficients, pCoefficients + 4, variable)
+            << Horner(pCoefficients, pCoefficients + n, variable)
             << std::endl;
   delete[] pCoefficients;
 }
