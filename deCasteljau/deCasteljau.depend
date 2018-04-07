@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1523110710 source:/home/valotam/Source/HMMOS/deCasteljau/deCasteljau.cpp
+	<iostream>
+	<cmath>
+
