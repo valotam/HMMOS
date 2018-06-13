@@ -14,18 +14,27 @@
                 "${fileDirname}/${fileBasenameNoExtension}"
             ],
             "group": "build",
+            "problemMatcher": []
         },
         // Compile for C++
         {
             "label": "C++ build for linux",
-            "command": "g++",
+            "command": [
+                "g++"
+            ],
             "args": [
                 "${file}",
                 "-g",
+                "-std=c++17",
+                "-Wall",
                 "-o",
-                "${fileDirname}/${fileBasenameNoExtension}"
+                "${fileDirname}/bin/${fileBasenameNoExtension}"
             ],
-            "group": "build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
         },
         {
             "label": "C++ build for windows",
@@ -37,10 +46,7 @@
                 "${fileBasenameNoExtension}.exe",
                 "${file}"
             ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
+            "group": "build",
             "problemMatcher": []
         },
 
@@ -48,19 +54,19 @@
         {
             "label": "execute for linux",
             "command": "sh",
-            "group": "test",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
             "args": [
-                "-c", "${fileDirname}/${fileBasenameNoExtension}"
+                "-c", "${fileDirname}/bin/${fileBasenameNoExtension}"
             ]
         },
         {
             "label": "execute for windows",
             "type": "shell",
             "command": "./${fileBasenameNoExtension}.exe",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
+            "group": "test",
             "problemMatcher": []
         }
     ]

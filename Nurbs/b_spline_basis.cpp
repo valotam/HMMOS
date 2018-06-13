@@ -19,24 +19,24 @@ void Print(const First& first, const Rest&... rest) {
     print(rest...); // recursive call using pack expansion syntax
 }
 
-auto Basis(const vector<float> &knot_vector, int degree) {
-    auto basis_function = [&](float parameter_u) ->function<float(float)>{
-        vector<int> N_zero;
+// auto Basis(const vector<float> &knot_vector, int degree) {
+//     auto basis_function = [&](float parameter_u) ->function<float(float)>{
+//         vector<int> N_zero;
 
-        for(int i = 0; i < knot_vector.size() - 1; i++)
-        {
-            if (knot_vector.at(i) == knot_vector.at(i)) {
-                N_zero.push_back(0);
-            }
-            else {
-                if (parameter_u >= knot_vector[i] && parameter_u < knot_vector[i+1])   N_zero.push_back(1);
-                else    N_zero.push_back(0);                
-            }
-        }
+//         for(int i = 0; i < knot_vector.size() - 1; i++)
+//         {
+//             if (knot_vector.at(i) == knot_vector.at(i)) {
+//                 N_zero.push_back(0);
+//             }
+//             else {
+//                 if (parameter_u >= knot_vector[i] && parameter_u < knot_vector[i+1])   N_zero.push_back(1);
+//                 else    N_zero.push_back(0);                
+//             }
+//         }
         
-    };
+//     };
     
-}
+// }
 
 
 /* Algorithm A2.1 Find span (i) p.68
