@@ -1,0 +1,31 @@
+{
+    "configurations": [
+        {
+            "name": "MinGW",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "compilerPath": "C:/mingw-w64/bin/gcc.exe",
+            "includePath": [
+                "${workspaceFolder}",
+                "C:/MinGW/include",
+                "C:/MinGW/lib/gcc/mingw32/6.3.0/include",
+                "C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++",
+                "C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/tr1",
+                "C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/mingw32"            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "__SIZE_TYPE__=unsigned int"
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 4
+}
