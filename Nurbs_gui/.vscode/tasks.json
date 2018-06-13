@@ -1,0 +1,88 @@
+{
+    "version": "2.0.0",
+    "runner": "terminal",
+    "echoCommand": true,
+    "tasks": [
+        // Compile for C
+        {
+            "label": "C build for linux",
+            "command": "gcc",
+            "args": [
+                "${file}",
+                "-g",
+                "-std=c99",
+                "-pedantic",
+                "-O2",
+                "-lglfw",
+                "-lGL",
+                "-lm",
+                "-lGLU",
+                "-lGLEW",
+                "-o",
+                "${fileDirname}/bin/${fileBasenameNoExtension}"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        // Compile for C++
+        {
+            "label": "C++ build for linux",
+            "command": [
+                "g++"
+            ],
+            "args": [
+                "${file}",
+                "-g",
+                "-std=c++17",
+                "-Wall",
+                "-pedantic",
+                "-O2",
+                "-lglfw",
+                "-lGL",
+                "-lm",
+                "-lGLU",
+                "-lGLEW",
+                "-o",
+                "${fileDirname}/bin/${fileBasenameNoExtension}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "C++ build for windows",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-g",
+                "-o",
+                "${fileBasenameNoExtension}.exe",
+                "${file}"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+
+        // Run binary
+        {
+            "label": "execute for linux",
+            "command": "sh",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "args": [
+                "-c", "${fileDirname}/bin/${fileBasenameNoExtension}"
+            ]
+        },
+        {
+            "label": "execute for windows",
+            "type": "shell",
+            "command": "./${fileBasenameNoExtension}.exe",
+            "group": "test",
+            "problemMatcher": []
+        }
+    ]
+}
