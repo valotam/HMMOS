@@ -1,8 +1,5 @@
 {
     "files.associations": {
-        "vector": "cpp",
-        "system_error": "cpp",
-        "ostream": "cpp",
-        "stdio.h": "c"
+
     }
 }

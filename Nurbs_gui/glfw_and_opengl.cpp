@@ -1,13 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdarg.h>
-#include <string.h>
-#include <math.h>
-#include <assert.h>
-#include <math.h>
-#include <limits.h>
-#include <time.h>
+#include <cmath>
+#include <climits>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -30,6 +25,8 @@
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
 
+using namespace std;
+
 /* ===============================================================
  *
  *                              GUI
@@ -45,12 +42,20 @@
 
 /* ===============================================================
  *
- *                          DEMO
+ *                      Callback Functions
  *
  * ===============================================================*/
 static void error_callback(int e, const char *d)
-{printf("Error %d: %s\n", e, d);}
+{cerr << "Error " << e << ": " << d << endl;}
 
+void cursor_posision_callback(GLFWwindow *window, double x_pos, double y_pos)
+{cout<< "X Posisition: " << x_pos << " : Y Position: " << y_pos << endl;}
+
+/* ===============================================================
+ *
+ *                             DEMO
+ *
+ * ===============================================================*/
 int main(void)
 {
     /* Platform */
@@ -58,12 +63,11 @@ int main(void)
     int width = 0, height = 0;
     struct nk_context *ctx;
     struct nk_colorf bg;
-    struct nk_image img;
 
     /* GLFW */
     glfwSetErrorCallback(error_callback);
     if (!glfwInit()) {
-        fprintf(stdout, "[GFLW] failed to init!\n");
+        cout << "[GFLW] failed to init!" << endl;
         exit(1);
     }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -72,15 +76,18 @@ int main(void)
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-    win = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Demo", NULL, NULL);
+    win = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Hull Modeling Methods for Offshore Structures", NULL, NULL);
     glfwMakeContextCurrent(win);
     glfwGetWindowSize(win, &width, &height);
+
+    /* Set callback functions */
+    glfwSetCursorPosCallback(win, cursor_posision_callback);
 
     /* OpenGL */
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     glewExperimental = 1;
     if (glewInit() != GLEW_OK) {
-        fprintf(stderr, "Failed to setup GLEW\n");
+        cerr << "Failed to setup [GLEW]!" << endl;
         exit(1);
     }
 
@@ -102,7 +109,7 @@ int main(void)
 
         /* ------------------ GUI ------------------ */
         #ifdef INCLUDE_OVERVIEW
-          overview(ctx);
+          overview(ctx, width, height);
         #endif
         /* ----------------------------------------- */
 
