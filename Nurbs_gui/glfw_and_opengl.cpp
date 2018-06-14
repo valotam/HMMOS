@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <vector>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -42,14 +43,37 @@ using namespace std;
 
 /* ===============================================================
  *
+ *                          Vertices
+ *
+ * ===============================================================*/
+struct vertex
+{
+    const float x, y;
+};
+
+vector<vertex> control_points;
+
+/* ===============================================================
+ *
  *                      Callback Functions
  *
  * ===============================================================*/
 static void error_callback(int e, const char *d)
 {cerr << "Error " << e << ": " << d << endl;}
 
-void cursor_posision_callback(GLFWwindow *window, double x_pos, double y_pos)
-{cout<< "X Posisition: " << x_pos << " : Y Position: " << y_pos << endl;}
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        control_points.push_back({xpos, ypos});
+    }
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+        if (control_points.size() != 0) {
+            control_points.pop_back();
+        }
+    }
+}
 
 /* ===============================================================
  *
@@ -80,9 +104,6 @@ int main(void)
     glfwMakeContextCurrent(win);
     glfwGetWindowSize(win, &width, &height);
 
-    /* Set callback functions */
-    glfwSetCursorPosCallback(win, cursor_posision_callback);
-
     /* OpenGL */
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     glewExperimental = 1;
@@ -91,14 +112,18 @@ int main(void)
         exit(1);
     }
 
+    /* Context */
     ctx = nk_glfw3_init(win, NK_GLFW3_INSTALL_CALLBACKS, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
-    /* Load Fonts: if none of these are loaded a default font will be used  */
-    /* Load Cursor: if you uncomment cursor loading please hide the cursor */
+
+    /* Set Fonts */
     {struct nk_font_atlas *atlas;
     nk_glfw3_font_stash_begin(&atlas);
     struct nk_font *font = nk_font_atlas_add_from_file(atlas, "./font/OpenSans-SemiBold.ttf", 20, 0);
     nk_glfw3_font_stash_end();
     nk_style_set_font(ctx, &font->handle);}
+
+    /* Set callback functions */
+    glfwSetMouseButtonCallback(win, mouse_button_callback);
 
     bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
     while (!glfwWindowShouldClose(win))
@@ -109,7 +134,7 @@ int main(void)
 
         /* ------------------ GUI ------------------ */
         #ifdef INCLUDE_OVERVIEW
-          overview(ctx, width, height);
+          gui(ctx, width, height);
         #endif
         /* ----------------------------------------- */
 

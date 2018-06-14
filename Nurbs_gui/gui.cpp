@@ -1,5 +1,5 @@
 static int
-overview(struct nk_context *ctx, int win_width, int win_height)
+gui(struct nk_context *ctx, int win_width, int win_height)
 {
     /* window flags */
     static int show_menu = nk_true;
@@ -13,7 +13,7 @@ overview(struct nk_context *ctx, int win_width, int win_height)
 
     /* popups */
     static enum nk_style_header_align header_align = NK_HEADER_RIGHT;
-    static int show_app_about = nk_true;
+    static int show_app_about = nk_false;
 
     /* window flags */
     window_flags = 0;
@@ -25,7 +25,7 @@ overview(struct nk_context *ctx, int win_width, int win_height)
     if (scale_left) window_flags |= NK_WINDOW_SCALE_LEFT;
     if (minimizable) window_flags |= NK_WINDOW_MINIMIZABLE;
 
-    if (nk_begin(ctx, "NURBS", nk_rect(0, 0, 250, 800), window_flags))
+    if (nk_begin(ctx, "NURBS", nk_rect(0, 0, 250, win_height), window_flags))
     {
         if (show_menu)
         {
