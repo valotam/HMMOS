@@ -53,6 +53,11 @@ struct vertex
 
 vector<vertex> control_points;
 
+GLfloat cp[] = {
+    0, 0, 0,
+    500, 500, 0
+};
+
 /* ===============================================================
  *
  *                      Callback Functions
@@ -134,9 +139,29 @@ int main(void)
 
         /* ------------------ GUI ------------------ */
         #ifdef INCLUDE_OVERVIEW
-          gui(ctx, width, height);
+            gui(ctx, width, height);
         #endif
         /* ----------------------------------------- */
+        glClear(GL_COLOR_BUFFER_BIT);
+        //glClearColor(255, 255, 255, bg.a);
+
+        const struct nk_command *cmd = 0;
+        nk_foreach(cmd, ctx) {
+        switch (cmd->type) {
+        case NK_COMMAND_LINE:
+            // your_draw_line_function(...)
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glVertexPointer( 3, GL_FLOAT, 0, cp);
+            glDrawArrays(GL_LINES, 0, 2);
+            glDisableClientState(GL_VERTEX_ARRAY);
+            break;
+        case NK_COMMAND_RECT:
+            // your_draw_rect_function(...)
+            break;
+            //[...]
+        }
+        nk_clear(ctx);
+        }
 
         /* Draw */
         glfwGetWindowSize(win, &width, &height);
@@ -145,6 +170,7 @@ int main(void)
         glClearColor(bg.r, bg.g, bg.b, bg.a);
 
         nk_glfw3_render(NK_ANTI_ALIASING_ON);
+        nk_clear(ctx);
         glfwSwapBuffers(win);
     }
     nk_glfw3_shutdown();
