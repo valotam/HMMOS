@@ -1,114 +1,56 @@
-#include <cmath>
-#include <climits>
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-#include <vector>
+/* nuklear - v1.05 - public domain */
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdarg.h>
+#include <string.h>
+#include <math.h>
+#include <assert.h>
+#include <math.h>
+#include <time.h>
+#include <limits.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#define NK_PRIVATE
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
-#define NK_INCLUDE_STANDARD_VARARGS
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
 #define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
 #define NK_IMPLEMENTATION
-#define NK_GLFW_GL4_IMPLEMENTATION
 #include "nuklear.h"
-#include "nuklear_glfw_gl4.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+/* macros */
 #define WINDOW_WIDTH 1200
 #define WINDOW_HEIGHT 800
 
-#define MAX_VERTEX_BUFFER 512 * 1024
-#define MAX_ELEMENT_BUFFER 128 * 1024
+#define MAX_VERTEX_MEMORY 512 * 1024
+#define MAX_ELEMENT_MEMORY 128 * 1024
 
-using namespace std;
+#define UNUSED(a) (void)a
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) < (b) ? (b) : (a))
+#define LEN(a) (sizeof(a)/sizeof(a)[0])
 
-/* ===============================================================
- *
- *                              GUI
- *
- * ===============================================================*/
-/* This are some code examples to provide a small overview of what can be
- * done with this library. To try out an example uncomment the defines */
-#define INCLUDE_OVERVIEW
-
-#ifdef INCLUDE_OVERVIEW
-  #include "./gui.cpp"
-#endif
-
-/* ===============================================================
- *
- *                          Vertices
- *
- * ===============================================================*/
-struct vertex
-{
-    const float x, y;
-};
-
-vector<vertex> control_points;
-
-float positions[6] = {
-    -0.5f, -0.5f,
-    0.0f,  0.0f,
-    0.5f, -0.5f
-    // 100.0f, 100.0f,
-    // 500.0f,  500.0f,
-    // 1200.0f, 500.0f
-};
-
-static unsigned int compile_shader(unsigned int type, const string& source)
-{
-    unsigned int id = glCreateShader(type);
-    const char * src = source.c_str();
-    glShaderSource(id, 1, &src, nullptr);
-    glCompileShader(id);
-
-    // TODO: Error handling
-    int result;
-    glGetShaderiv(id, GL_COMPILE_STATUS, &result);
-    if (result == GL_FALSE) {
-        int length;
-        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-        char *message = (char*)alloca(length * sizeof(char));
-        glGetShaderInfoLog(id, length, &length, message);
-        cout << "Failed to compile" << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") << "shader!" << endl;
-        cout << message << endl;
-        glDeleteShader(id);
-
-        return 0;
-    }
-    
-
-    return id;
-}
-static unsigned int create_shader(const string& vetex_shader, const string& frag_shader)
-{
-    unsigned int program = glCreateProgram();
-    unsigned int vs = compile_shader(GL_VERTEX_SHADER, vetex_shader);
-    unsigned int fs = compile_shader(GL_FRAGMENT_SHADER, frag_shader);
-
-    glAttachShader(program, vs);
-    glAttachShader(program, fs);
-    glLinkProgram(program);
-    glValidateProgram(program);
-
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-
-    return program;
-}
+#define NK_SHADER_VERSION "#version 150\n"
 
 /* ===============================================================
  *
  *                          DEVICE
  *
  * ===============================================================*/
+struct nk_glfw_vertex {
+    float position[2];
+    float uv[2];
+    nk_byte col[4];
+};
+
 struct device {
     struct nk_buffer cmds;
     struct nk_draw_null_texture null;
@@ -123,6 +65,37 @@ struct device {
     GLint uniform_proj;
     GLuint font_tex;
 };
+
+static void
+die(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    fputs("\n", stderr);
+    exit(EXIT_FAILURE);
+}
+
+static struct nk_image
+icon_load(const char *filename)
+{
+    int x,y,n;
+    GLuint tex;
+    unsigned char *data = stbi_load(filename, &x, &y, &n, 0);
+    if (!data) die("[SDL]: failed to load image: %s", filename);
+
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(data);
+    return nk_image_id((int)tex);
+}
 
 static void
 device_init(struct device *dev)
@@ -268,8 +241,8 @@ device_draw(struct device *dev, struct nk_context *ctx, int width, int height,
         glBindBuffer(GL_ARRAY_BUFFER, dev->vbo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, dev->ebo);
 
-        glBufferData(GL_ARRAY_BUFFER, MAX_VERTEX_BUFFER, NULL, GL_STREAM_DRAW);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAX_ELEMENT_BUFFER, NULL, GL_STREAM_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, MAX_VERTEX_MEMORY, NULL, GL_STREAM_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAX_ELEMENT_MEMORY, NULL, GL_STREAM_DRAW);
 
         /* load draw vertices & elements directly into vertex + element buffer */
         vertices = glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
@@ -297,8 +270,8 @@ device_draw(struct device *dev, struct nk_context *ctx, int width, int height,
 
             /* setup buffers to load vertices and elements */
             {struct nk_buffer vbuf, ebuf;
-            nk_buffer_init_fixed(&vbuf, vertices, MAX_VERTEX_BUFFER);
-            nk_buffer_init_fixed(&ebuf, elements, MAX_ELEMENT_BUFFER);
+            nk_buffer_init_fixed(&vbuf, vertices, MAX_VERTEX_MEMORY);
+            nk_buffer_init_fixed(&ebuf, elements, MAX_ELEMENT_MEMORY);
             nk_convert(ctx, &dev->cmds, &vbuf, &ebuf, &config);}
         }
         glUnmapBuffer(GL_ARRAY_BUFFER);
@@ -327,6 +300,51 @@ device_draw(struct device *dev, struct nk_context *ctx, int width, int height,
     glBindVertexArray(0);
     glDisable(GL_BLEND);
     glDisable(GL_SCISSOR_TEST);
+}
+
+/* glfw callbacks (I don't know if there is a easier way to access text and scroll )*/
+static void error_callback(int e, const char *d){printf("Error %d: %s\n", e, d);}
+static void text_input(GLFWwindow *win, unsigned int codepoint)
+{nk_input_unicode((struct nk_context*)glfwGetWindowUserPointer(win), codepoint);}
+static void scroll_input(GLFWwindow *win, double _, double yoff)
+{UNUSED(_);nk_input_scroll((struct nk_context*)glfwGetWindowUserPointer(win), nk_vec2(0, (float)yoff));}
+
+static void
+pump_input(struct nk_context *ctx, GLFWwindow *win)
+{
+    double x, y;
+    nk_input_begin(ctx);
+    glfwPollEvents();
+
+    nk_input_key(ctx, NK_KEY_DEL, glfwGetKey(win, GLFW_KEY_DELETE) == GLFW_PRESS);
+    nk_input_key(ctx, NK_KEY_ENTER, glfwGetKey(win, GLFW_KEY_ENTER) == GLFW_PRESS);
+    nk_input_key(ctx, NK_KEY_TAB, glfwGetKey(win, GLFW_KEY_TAB) == GLFW_PRESS);
+    nk_input_key(ctx, NK_KEY_BACKSPACE, glfwGetKey(win, GLFW_KEY_BACKSPACE) == GLFW_PRESS);
+    nk_input_key(ctx, NK_KEY_LEFT, glfwGetKey(win, GLFW_KEY_LEFT) == GLFW_PRESS);
+    nk_input_key(ctx, NK_KEY_RIGHT, glfwGetKey(win, GLFW_KEY_RIGHT) == GLFW_PRESS);
+    nk_input_key(ctx, NK_KEY_UP, glfwGetKey(win, GLFW_KEY_UP) == GLFW_PRESS);
+    nk_input_key(ctx, NK_KEY_DOWN, glfwGetKey(win, GLFW_KEY_DOWN) == GLFW_PRESS);
+
+    if (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
+        glfwGetKey(win, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS) {
+        nk_input_key(ctx, NK_KEY_COPY, glfwGetKey(win, GLFW_KEY_C) == GLFW_PRESS);
+        nk_input_key(ctx, NK_KEY_PASTE, glfwGetKey(win, GLFW_KEY_P) == GLFW_PRESS);
+        nk_input_key(ctx, NK_KEY_CUT, glfwGetKey(win, GLFW_KEY_X) == GLFW_PRESS);
+        nk_input_key(ctx, NK_KEY_CUT, glfwGetKey(win, GLFW_KEY_E) == GLFW_PRESS);
+        nk_input_key(ctx, NK_KEY_SHIFT, 1);
+    } else {
+        nk_input_key(ctx, NK_KEY_COPY, 0);
+        nk_input_key(ctx, NK_KEY_PASTE, 0);
+        nk_input_key(ctx, NK_KEY_CUT, 0);
+        nk_input_key(ctx, NK_KEY_SHIFT, 0);
+    }
+
+    glfwGetCursorPos(win, &x, &y);
+    nk_input_motion(ctx, (int)x, (int)y);
+    nk_input_button(ctx, NK_BUTTON_LEFT, (int)x, (int)y, glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+    nk_input_button(ctx, NK_BUTTON_MIDDLE, (int)x, (int)y, glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS);
+    nk_input_button(ctx, NK_BUTTON_RIGHT, (int)x, (int)y, glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS);
+    nk_input_end(ctx);
 }
 
 struct nk_canvas {
@@ -372,143 +390,70 @@ canvas_end(struct nk_context *ctx, struct nk_canvas *canvas)
     ctx->style.window.fixed_background = canvas->window_background;
 }
 
-/* ===============================================================
- *
- *                      Callback Functions
- *
- * ===============================================================*/
-static void error_callback(int e, const char *d)
-{cerr << "Error " << e << ": " << d << endl;}
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        double xpos, ypos;
-        glfwGetCursorPos(window, &xpos, &ypos);
-        control_points.push_back({xpos, ypos});
-    }
-    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-        if (control_points.size() != 0) {
-            control_points.pop_back();
-        }
-    }
-}
-
-/* ===============================================================
- *
- *                             DEMO
- *
- * ===============================================================*/
-int main(void)
+int main(int argc, char *argv[])
 {
     /* Platform */
     static GLFWwindow *win;
     int width = 0, height = 0;
-    struct nk_context *ctx;
-    struct nk_colorf bg;
+
+    /* GUI */
+    struct device device;
+    struct nk_font_atlas atlas;
+    struct nk_context ctx;
 
     /* GLFW */
     glfwSetErrorCallback(error_callback);
     if (!glfwInit()) {
-        cout << "[GFLW] failed to init!" << endl;
+        fprintf(stdout, "[GFLW] failed to init!\n");
         exit(1);
     }
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-    win = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Hull Modeling Methods for Offshore Structures", NULL, NULL);
+    win = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Demo", NULL, NULL);
     glfwMakeContextCurrent(win);
+    glfwSetWindowUserPointer(win, &ctx);
+    glfwSetCharCallback(win, text_input);
+    glfwSetScrollCallback(win, scroll_input);
     glfwGetWindowSize(win, &width, &height);
 
     /* OpenGL */
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     glewExperimental = 1;
     if (glewInit() != GLEW_OK) {
-        cerr << "Failed to setup [GLEW]!" << endl;
+        fprintf(stderr, "Failed to setup GLEW\n");
         exit(1);
     }
 
-    /* Context */
-    ctx = nk_glfw3_init(win, NK_GLFW3_INSTALL_CALLBACKS, MAX_VERTEX_BUFFER, MAX_ELEMENT_BUFFER);
+    /* GUI */
+    {device_init(&device);
+    {const void *image; int w, h;
+    struct nk_font *font;
+    nk_font_atlas_init_default(&atlas);
+    nk_font_atlas_begin(&atlas);
+    font = nk_font_atlas_add_default(&atlas, 13, 0);
+    image = nk_font_atlas_bake(&atlas, &w, &h, NK_FONT_ATLAS_RGBA32);
+    device_upload_atlas(&device, image, w, h);
+    nk_font_atlas_end(&atlas, nk_handle_id((int)device.font_tex), &device.null);
+    nk_init_default(&ctx, &font->handle);
 
-    /* Set Fonts */
-    {struct nk_font_atlas *atlas;
-    nk_glfw3_font_stash_begin(&atlas);
-    struct nk_font *font = nk_font_atlas_add_from_file(atlas, "./font/OpenSans-SemiBold.ttf", 20, 0);
-    nk_glfw3_font_stash_end();
-    nk_style_set_font(ctx, &font->handle);}
-
-    /* Set callback functions */
-    glfwSetMouseButtonCallback(win, mouse_button_callback);
-
-    /* Set buffer */
-    unsigned int vao;
-    glGenVertexArrays(1,&vao);
-    glBindVertexArray(vao);
-
-    unsigned int buffer;
-    glGenBuffers(1, &buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GL_FLOAT), (const void*)0);
-
-    string vetex_shader = 
-        "#version 450 core\n"
-        "\n"
-        "layout(location = 0) in vec4 position;"
-        "\n"
-        "void main()\n"
-        "{\n"
-        "   gl_Position = position;\n"
-        "}\n";
-    string fragment_shader = 
-        "#version 450 core\n"
-        "\n"
-        "layout(location = 0) out vec4 color;"
-        "\n"
-        "void main()\n"
-        "{\n"
-        "   color = vec4(1.0, 0.0, 0.0, 1.0);\n"
-        "}\n";
-
-    unsigned int shader = create_shader(vetex_shader, fragment_shader);
-    glUseProgram(shader);
-    cout << glGetString(GL_VERSION) << endl;
-
-    bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
+    glEnable(GL_TEXTURE_2D);
     while (!glfwWindowShouldClose(win))
     {
-        /* Input */
-        glfwPollEvents();
-        nk_glfw3_new_frame();
+        /* input */
+        pump_input(&ctx, win);
 
         /* draw */
         {struct nk_canvas canvas;
-        nk_flags window_flags = 0;
-        /* window flags */
-        window_flags = 0;
-        //ctx->style.window.header.align = header_align;
-        window_flags |= NK_WINDOW_BORDER;
-        window_flags |= NK_WINDOW_SCALABLE;
-        window_flags |= NK_WINDOW_MOVABLE;
-        window_flags |= NK_WINDOW_NO_SCROLLBAR;
-        window_flags |= NK_WINDOW_SCALE_LEFT;
-        window_flags |= NK_WINDOW_MINIMIZABLE;
-
-        canvas_begin(ctx, &canvas, window_flags, 250, 0, width/2, height/2, nk_white);
+        canvas_begin(&ctx, &canvas, 0, 0, 0, width, height, nk_rgb(250,250,250));
         {
-            // nk_fill_rect(canvas.painter, nk_rect(15,15,210,210), 5, nk_rgb(247, 230, 154));
-            // nk_fill_rect(canvas.painter, nk_rect(20,20,200,200), 5, nk_rgb(188, 174, 118));
-            // //nk_draw_text(canvas.painter, nk_rect(30, 30, 150, 20), "Text to draw", 12, &font->handle, nk_rgb(188,174,118), nk_rgb(0,0,0));
-            // nk_fill_rect(canvas.painter, nk_rect(250,20,100,100), 0, nk_rgb(0,0,255));
-            // nk_fill_circle(canvas.painter, nk_rect(20,250,100,100), nk_rgb(255,0,0));
-            // nk_fill_triangle(canvas.painter, 250, 250, 350, 250, 300, 350, nk_rgb(0,255,0));
-            // nk_fill_arc(canvas.painter, 300, 180, 50, 0, 3.141592654f * 3.0f / 4.0f, nk_rgb(255,255,0));
+            nk_fill_rect(canvas.painter, nk_rect(15,15,210,210), 5, nk_rgb(247, 230, 154));
+            nk_fill_rect(canvas.painter, nk_rect(20,20,200,200), 5, nk_rgb(188, 174, 118));
+            nk_draw_text(canvas.painter, nk_rect(30, 30, 150, 20), "Text to draw", 12, &font->handle, nk_rgb(188,174,118), nk_rgb(0,0,0));
+            nk_fill_rect(canvas.painter, nk_rect(250,20,100,100), 0, nk_rgb(0,0,255));
+            nk_fill_circle(canvas.painter, nk_rect(20,250,100,100), nk_rgb(255,0,0));
+            nk_fill_triangle(canvas.painter, 250, 250, 350, 250, 300, 350, nk_rgb(0,255,0));
+            nk_fill_arc(canvas.painter, 300, 180, 50, 0, 3.141592654f * 3.0f / 4.0f, nk_rgb(255,255,0));
 
             {float points[12];
             points[0] = 200; points[1] = 250;
@@ -520,36 +465,24 @@ int main(void)
             nk_fill_polygon(canvas.painter, points, 6, nk_rgb(0,0,0));}
 
             nk_stroke_line(canvas.painter, 15, 10, 200, 10, 2.0f, nk_rgb(189,45,75));
-            // nk_stroke_rect(canvas.painter, nk_rect(370, 20, 100, 100), 10, 3, nk_rgb(0,0,255));
-            // nk_stroke_curve(canvas.painter, 380, 200, 405, 270, 455, 120, 480, 200, 2, nk_rgb(0,150,220));
-            // nk_stroke_circle(canvas.painter, nk_rect(20, 370, 100, 100), 5, nk_rgb(0,255,120));
-            // nk_stroke_triangle(canvas.painter, 370, 250, 470, 250, 420, 350, 6, nk_rgb(255,0,143));
+            nk_stroke_rect(canvas.painter, nk_rect(370, 20, 100, 100), 10, 3, nk_rgb(0,0,255));
+            nk_stroke_curve(canvas.painter, 380, 200, 405, 270, 455, 120, 480, 200, 2, nk_rgb(0,150,220));
+            nk_stroke_circle(canvas.painter, nk_rect(20, 370, 100, 100), 5, nk_rgb(0,255,120));
+            nk_stroke_triangle(canvas.painter, 370, 250, 470, 250, 420, 350, 6, nk_rgb(255,0,143));
         }
-        canvas_end(ctx, &canvas);}
-
-        /* ------------------ GUI ------------------ */
-        #ifdef INCLUDE_OVERVIEW
-            gui(ctx, width, height);
-        #endif
-        /* ----------------------------------------- */
-
-        glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(0);
-        
+        canvas_end(&ctx, &canvas);}
 
         /* Draw */
         glfwGetWindowSize(win, &width, &height);
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor(bg.r, bg.g, bg.b, bg.a);
-
-        nk_glfw3_render(NK_ANTI_ALIASING_ON);
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+        device_draw(&device, &ctx, width, height, NK_ANTI_ALIASING_ON);
         glfwSwapBuffers(win);
-    }
-    nk_glfw3_shutdown();
-
-    glDeleteShader(shader);
+    }}}
+    nk_font_atlas_clear(&atlas);
+    nk_free(&ctx);
+    device_shutdown(&device);
     glfwTerminate();
     return 0;
 }
