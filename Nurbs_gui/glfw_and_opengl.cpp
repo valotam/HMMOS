@@ -26,6 +26,8 @@
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
 
+#include "vertex.h"
+
 using namespace std;
 
 /* ===============================================================
@@ -53,12 +55,7 @@ using namespace std;
  *                          Vertices
  *
  * ===============================================================*/
-struct vertex
-{
-    const float x, y;
-};
-
-vector<vertex> control_points;
+vector<SS::Vertex2f> control_points;
 
 /* ===============================================================
  *

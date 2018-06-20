@@ -2,6 +2,8 @@
 #include <functional>
 #include <iostream>
 
+#include "vertex.h"
+
 using namespace std;
 
 /* Algorithm A2.1 Find span (i) p.68
@@ -86,9 +88,17 @@ float curve_point(
     return curve_point;
 }
 
+/* Centripetal (Material 7.1 p.19)
+ * 
+ */
+void parameter_values(const vector<SS::Vertex2f> control_points)
+{
+    
+}
+
 int main(int argc, char const *argv[])
 {
-    const vector<float> knot_vector = { 0, 0, 0, 1, 2, 3, 4, 4, 5, 5, 5 };
+    const vector<float> knot_vector = { 0, 0, 0, 1, 2, 3, 4, 4, 5, 1, 1 };
     vector<float> basis(knot_vector.size()-1);
     const vector<float> control_points = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
     int degree = 2;
