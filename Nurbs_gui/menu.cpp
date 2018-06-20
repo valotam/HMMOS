@@ -1,10 +1,10 @@
 static int
-gui(struct nk_context *ctx, int win_width, int win_height)
+menu(struct nk_context *ctx, int win_width, int win_height)
 {
     /* window flags */
     static int show_menu = nk_true;
     static int border = nk_true;
-    static int resize = nk_true;
+    static int resize = nk_false;
     static int movable = nk_false;
     static int no_scrollbar = nk_false;
     static int scale_left = nk_false;
@@ -25,7 +25,13 @@ gui(struct nk_context *ctx, int win_width, int win_height)
     if (scale_left) window_flags |= NK_WINDOW_SCALE_LEFT;
     if (minimizable) window_flags |= NK_WINDOW_MINIMIZABLE;
 
-    if (nk_begin(ctx, "NURBS", nk_rect(0, 0, 250, win_height), window_flags))
+    /* create/update window and set position + size */
+    struct nk_rect bounds = nk_rect(0, 0, 250, win_height);
+    const char *title = "NURBs";
+    window_flags = window_flags & ~NK_WINDOW_DYNAMIC;
+    nk_window_set_bounds(ctx, title, bounds);
+
+    if (nk_begin(ctx, title, bounds, window_flags))
     {
         if (show_menu)
         {
