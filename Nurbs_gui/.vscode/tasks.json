@@ -37,7 +37,7 @@
                 "-Wall",
                 "-Wno-narrowing",
                 "-pedantic",
-                "-O2",
+                "-O0",
                 "-lglfw",
                 "-lGL",
                 "-lm",

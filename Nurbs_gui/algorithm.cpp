@@ -18,7 +18,7 @@ int find_span(
     int index_of_last_internal_knot, 
     int degree, 
     float parameter_u, 
-    const vector<float>& knot_vector)
+    vector<float>& knot_vector)
 {
     if (parameter_u == knot_vector[degree])
         return degree;
@@ -46,7 +46,7 @@ void basis_functions(
     int index_basis, 
     float parameter_u,
     int degree, 
-    const vector<float> &knot_vector,
+    vector<float> &knot_vector,
     vector<float> &basis)
 {
     basis[0] = 1.0f;
@@ -69,26 +69,28 @@ void basis_functions(
         
         basis[j] = saved;
     }
-    
 }
 
 /* Algorithm A3.1 Compute curve point p.82
  *
  */
-float curve_point(
+SS::Vertex2f curve_point(
     int index_of_last_internal_knot,
     int degree,
-    const vector<float> &knot_vector,
+    vector<float> &knot_vector,
     vector<float> &basis,
-    const vector<float> &control_points,
+    vector<SS::Vertex2f> &control_points,
     float parameter_u)
 {
     int span = find_span(index_of_last_internal_knot, degree, parameter_u, knot_vector);
     basis_functions(span, parameter_u, degree, knot_vector, basis);
-    float curve_point = 0;
+    SS::Vertex2f curve_point = { 0.0f, 0.0f };
     
-    for(int i = 0; i < degree; i++)
-        curve_point += basis[i] * control_points[span - degree + i];
+    for(int i = 0; i <= degree; i++)
+    {
+        curve_point.x += basis[i] * control_points[span - degree + i].x;
+        curve_point.y += basis[i] * control_points[span - degree + i].x;
+    }
     
     return curve_point;
 }
@@ -219,37 +221,32 @@ vector<float> get_knot_vector(
 
 int main(int argc, char const *argv[])
 {
-    vector<float> knot_vector = { 0, 0, 0, 1, 2, 3, 4, 4, 5, 1, 1 };
-    vector<float> basis(knot_vector.size()-1);
-    vector<float> control_points = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-    int degree = 2;
-    int index_of_last_internal_knot = knot_vector.size() - 1 - degree - 1;
     float parameter_u = 1.0f;
-
-    float point_on_curve = curve_point(index_of_last_internal_knot, degree, knot_vector, 
-        basis, control_points, parameter_u);
-
-    cout << point_on_curve << endl;
-
-    vector<SS::Vertex2f> cp = {
+    int degree = 2;
+    vector<SS::Vertex2f> control_points = {
         {0.0f, 0.0f},
         {1.0f, 0.0f},
         {2.0f, 0.0f},
-        {4.0f, 0.0f},
-        {5.0f, 0.0f}
+        {3.0f, 0.0f},
+        {4.0f, 0.0f}
     };
 
-    vector<float> u = parameter_values(cp, equally_spaced);
-    vector<float> v = parameter_values(cp, chord_length);
-    vector<float> w = parameter_values(cp, centripetal);
-
-    cout << u.size() << endl;
-    cout << v.size() << endl;
-    cout << w.size() << endl;
+    vector<float> u = parameter_values(control_points, equally_spaced);
+    vector<float> v = parameter_values(control_points, chord_length);
+    vector<float> w = parameter_values(control_points, centripetal);
 
     vector<float> knots = get_knot_vector(u, degree, equal_spacing);
     vector<float> knots2 = get_knot_vector(u, degree, averageing);
-    vector<float> knots3 = get_knot_vector(u, degree, averageing);
 
+    int index_of_last_internal_knot = knots.size() - 1 - degree - 1;
+    vector<float> basis(degree + 1);
+
+    SS::Vertex2f point_on_curve = curve_point(index_of_last_internal_knot, degree, knots, 
+        basis, control_points, parameter_u);
+
+
+    vector<float> knots3 = get_knot_vector(u, degree, equal_spacing);
+
+    cout << point_on_curve.x << " " << point_on_curve.y << endl;
     return 0;
 }
