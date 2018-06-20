@@ -1,3 +1,4 @@
+#include <cmath>
 #include <vector>
 #include <functional>
 #include <iostream>
@@ -5,6 +6,9 @@
 #include "vertex.h"
 
 using namespace std;
+using namespace std::placeholders;
+using Parameter_Function = std::function<float(SS::Vertex2f, SS::Vertex2f, float, int)>;
+
 
 /* Algorithm A2.1 Find span (i) p.68
  *
@@ -91,16 +95,66 @@ float curve_point(
 /* Centripetal (Material 7.1 p.19)
  * 
  */
-void parameter_values(const vector<SS::Vertex2f> control_points)
+static SS::Vertex2f get_delta(SS::Vertex2f vertex_initial, SS::Vertex2f vertex_final)
 {
+    float delta_x = vertex_final.x - vertex_initial.x;
+    float delta_y = vertex_final.y - vertex_initial.y;
+    SS::Vertex2f delta = { delta_x, delta_y };
+    return delta;
+}
+static float equally_spaced(SS::Vertex2f vertex_initial, SS::Vertex2f vertex_final, float length_over_all, int num_of_parameters)
+{
+    float result = 1.0f / (num_of_parameters - 1);
+    return result;
+}
+static float chord_length(SS::Vertex2f vertex_initial, SS::Vertex2f vertex_final, float length_over_all, int num_of_parameters)
+{
+    float result = 0;
+    SS::Vertex2f delta = get_delta(vertex_initial, vertex_final);
+    float norm = sqrtf(powf(delta.x, 2) + powf(delta.y, 2));
+    result = norm / length_over_all;
+
+    return result;
+}
+static float centripetal(SS::Vertex2f vertex_initial, SS::Vertex2f vertex_final, float length_over_all, int num_of_parameters)
+{
+    float result = 0;
+    SS::Vertex2f delta = get_delta(vertex_initial, vertex_final);
+    float norm = sqrtf(powf(delta.x, 2) + powf(delta.y, 2));
+    result = sqrtf(norm) / length_over_all;
+
+    return result;
+}
+vector<float> parameter_values(vector<SS::Vertex2f> control_points, Parameter_Function parameter_function)
+{
+    int size = control_points.size();
+    vector<float> results(size);
+    parameter_function = bind(parameter_function, _1, _2, _3, _4);
+
+    float length_over_all = 0;
+    for(int i = 1; i < size; i++)
+    {
+        SS::Vertex2f delta = get_delta(control_points[i - 1], control_points[i]);
+        length_over_all += sqrtf(powf(delta.x, 2) + powf(delta.y, 2));
+    }
     
+    results[0] = 0.0f; // inital u_0 = 0;
+
+    for(int i = 1; i < size - 1; i++)
+    {
+        results[i] = results[i - 1] + parameter_function(control_points[i - 1], control_points[i], length_over_all, size);
+    }
+
+    results[size - 1] = 1.0f;
+
+    return results;
 }
 
 int main(int argc, char const *argv[])
 {
-    const vector<float> knot_vector = { 0, 0, 0, 1, 2, 3, 4, 4, 5, 1, 1 };
+    vector<float> knot_vector = { 0, 0, 0, 1, 2, 3, 4, 4, 5, 1, 1 };
     vector<float> basis(knot_vector.size()-1);
-    const vector<float> control_points = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+    vector<float> control_points = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
     int degree = 2;
     int index_of_last_internal_knot = knot_vector.size() - 1 - degree - 1;
     float parameter_u = 1.0f;
@@ -108,6 +162,24 @@ int main(int argc, char const *argv[])
     float point_on_curve = curve_point(index_of_last_internal_knot, degree, knot_vector, basis, control_points, parameter_u);
 
     cout << point_on_curve << endl;
+
+    vector<SS::Vertex2f> cp = {
+        {0.0f, 0.0f},
+        {1.0f, 0.0f},
+        {2.0f, 0.0f},
+        {4.0f, 0.0f},
+        {5.0f, 0.0f}
+    };
+
+    vector<float> u = parameter_values(cp, equally_spaced);
+    vector<float> v = parameter_values(cp, chord_length);
+    vector<float> w = parameter_values(cp, centripetal);
+
+    cout << u.size() << endl;
+    cout << v.size() << endl;
+    cout << w.size() << endl;
+
+    vector<float> k = parameter_values(cp, centripetal);
 
     return 0;
 }
