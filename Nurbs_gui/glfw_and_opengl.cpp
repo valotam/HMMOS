@@ -37,12 +37,12 @@ using namespace std;
  * done with this library. To try out an example uncomment the defines */
 #define INCLUDE_GUI_FEATURES
 #ifdef INCLUDE_GUI_FEATURES
-#define INCLUDE_MENU
-#define INCLUDE_CANVAS
+    #define INCLUDE_MENU
+    #define INCLUDE_CANVAS
 #endif /*INCLDUE_GUI_FEATURES */
 
 #ifdef INCLUDE_MENU
-  #include "./menu.cpp"
+    #include "./menu.cpp"
 #endif
 #ifdef INCLUDE_CANVAS
     #include "./canvas.cpp"
@@ -75,7 +75,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
     bool is_in_canvas = false;
 
-    if (xpos > 250) {
+    if (xpos > 400) {
         is_in_canvas = true;
     }
     

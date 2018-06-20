@@ -75,7 +75,7 @@ canvas(struct nk_context *ctx, int win_width, int win_height)
 
     /* draw */
     {struct nk_canvas canvas;
-    int start = 250;
+    int start = 400;
     if (canvas_begin(ctx, &canvas, "Canvas", nk_rect(start, 0, win_width-start, win_height), window_flags, nk_white))
     {
         const struct nk_color color = nk_default_color_style[NK_COLOR_CHART_COLOR];

@@ -13,7 +13,7 @@ menu(struct nk_context *ctx, int win_width, int win_height)
 
     /* popups */
     static enum nk_style_header_align header_align = NK_HEADER_RIGHT;
-    static int show_app_about = nk_false;
+    static int show_app_about = nk_true;
 
     /* window flags */
     window_flags = 0;
@@ -26,7 +26,8 @@ menu(struct nk_context *ctx, int win_width, int win_height)
     if (minimizable) window_flags |= NK_WINDOW_MINIMIZABLE;
 
     /* create/update window and set position + size */
-    struct nk_rect bounds = nk_rect(0, 0, 250, win_height);
+    int start = 400;
+    struct nk_rect bounds = nk_rect(0, 0, start, win_height);
     const char *title = "NURBs";
     window_flags = window_flags & ~NK_WINDOW_DYNAMIC;
     nk_window_set_bounds(ctx, title, bounds);
@@ -74,23 +75,23 @@ menu(struct nk_context *ctx, int win_width, int win_height)
         if (show_app_about)
         {
             /* about popup */
-            static struct nk_rect s = {(win_width-300)/2, (win_height - 380)/2, 300, 190};
+            static struct nk_rect s = {start+ 100, 150, start, 350};
             if (nk_popup_begin(ctx, NK_POPUP_STATIC, "About", NK_WINDOW_CLOSABLE, s))
             {
                 nk_layout_row_dynamic(ctx, 20, 1);
-                nk_label(ctx, "Nuklear", NK_TEXT_LEFT);
-                nk_label(ctx, "By Micha Mettke", NK_TEXT_LEFT);
-                nk_label(ctx, "nuklear is licensed under the public domain License.",  NK_TEXT_LEFT);
+                nk_label(ctx, "Non-uniform rational B-spline", NK_TEXT_LEFT);
+                nk_label(ctx, "By S.S. Park", NK_TEXT_LEFT);
+                nk_label(ctx, "Lecture: Hull Modeling Methods for Offshore Structures",  NK_TEXT_CENTERED);
                 nk_popup_end(ctx);
             } else show_app_about = nk_false;
         }
 
-        if (nk_tree_push(ctx, NK_TREE_TAB, "Widgets", NK_MINIMIZED))
+        if (nk_tree_push(ctx, NK_TREE_TAB, "Widgets", NK_MAXIMIZED))
         {
             enum options {A,B,C};
             static int checkbox;
             static int option;
-            if (nk_tree_push(ctx, NK_TREE_NODE, "Text", NK_MINIMIZED))
+            if (nk_tree_push(ctx, NK_TREE_NODE, "Text", NK_MAXIMIZED))
             {
                 /* Text Widgets */
                 nk_layout_row_dynamic(ctx, 20, 1);
@@ -108,7 +109,7 @@ menu(struct nk_context *ctx, int win_width, int win_height)
                 nk_tree_pop(ctx);
             }
 
-            if (nk_tree_push(ctx, NK_TREE_NODE, "Basic", NK_MINIMIZED))
+            if (nk_tree_push(ctx, NK_TREE_NODE, "Basic", NK_MAXIMIZED))
             {
                 /* Basic widgets */
                 static int int_slider = 5;
@@ -165,7 +166,7 @@ menu(struct nk_context *ctx, int win_width, int win_height)
                 nk_tree_pop(ctx);
             }
 
-            if (nk_tree_push(ctx, NK_TREE_NODE, "Inactive", NK_MINIMIZED))
+            if (nk_tree_push(ctx, NK_TREE_NODE, "Inactive", NK_MAXIMIZED))
             {
                 static int inactive = 1;
                 nk_layout_row_dynamic(ctx, 30, 1);
@@ -191,7 +192,7 @@ menu(struct nk_context *ctx, int win_width, int win_height)
             }
 
 
-            if (nk_tree_push(ctx, NK_TREE_NODE, "Input", NK_MINIMIZED))
+            if (nk_tree_push(ctx, NK_TREE_NODE, "Input", NK_MAXIMIZED))
             {
                 static const float ratio[] = {120, 150};
                 static char field_buffer[64];
@@ -251,7 +252,7 @@ menu(struct nk_context *ctx, int win_width, int win_height)
             nk_tree_pop(ctx);
         }
 
-        if (nk_tree_push(ctx, NK_TREE_TAB, "Chart", NK_MINIMIZED))
+        if (nk_tree_push(ctx, NK_TREE_TAB, "Chart", NK_MAXIMIZED))
         {
             /* Chart Widgets
              * This library has two different rather simple charts. The line and the
@@ -349,7 +350,7 @@ menu(struct nk_context *ctx, int win_width, int win_height)
             nk_tree_pop(ctx);
         }
 
-        if (nk_tree_push(ctx, NK_TREE_TAB, "Popup", NK_MINIMIZED))
+        if (nk_tree_push(ctx, NK_TREE_TAB, "Popup", NK_MAXIMIZED))
         {
             static struct nk_color color = {255,0,0, 255};
             static int select[4];
@@ -436,9 +437,9 @@ menu(struct nk_context *ctx, int win_width, int win_height)
             nk_tree_pop(ctx);
         }
 
-        if (nk_tree_push(ctx, NK_TREE_TAB, "Layout", NK_MINIMIZED))
+        if (nk_tree_push(ctx, NK_TREE_TAB, "Layout", NK_MAXIMIZED))
         {
-            if (nk_tree_push(ctx, NK_TREE_NODE, "Group", NK_MINIMIZED))
+            if (nk_tree_push(ctx, NK_TREE_NODE, "Group", NK_MAXIMIZED))
             {
                 static int group_titlebar = nk_false;
                 static int group_border = nk_true;
@@ -477,7 +478,7 @@ menu(struct nk_context *ctx, int win_width, int win_height)
                 nk_tree_pop(ctx);
             }
 
-            if (nk_tree_push(ctx, NK_TREE_NODE, "Simple", NK_MINIMIZED))
+            if (nk_tree_push(ctx, NK_TREE_NODE, "Simple", NK_MAXIMIZED))
             {
                 nk_layout_row_dynamic(ctx, 300, 2);
                 if (nk_group_begin(ctx, "Group_Without_Border", 0)) {
