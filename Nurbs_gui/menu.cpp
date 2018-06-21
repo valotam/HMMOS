@@ -176,31 +176,46 @@ menu(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs &nurbs)
 
             if (nk_tree_push(ctx, NK_TREE_NODE, "Status", NK_MAXIMIZED))
             {
-                nk_layout_row_dynamic(ctx, 25, 3);
-                nk_label(ctx, "Control Points (X, Y)", NK_TEXT_CENTERED);
-                nk_label(ctx, "Parameters", NK_TEXT_CENTERED);
-                nk_label(ctx, "Knots", NK_TEXT_CENTERED);
+                static const float ratio[] = {60, 90};
 
-                nk_layout_row_dynamic(ctx, 300, 3);
+                nk_layout_row_dynamic(ctx, 25, 2);
+                nk_label(ctx, "Control Points (X, Y)", NK_TEXT_CENTERED);
+                nk_label(ctx, "Weights", NK_TEXT_CENTERED);
+
+                nk_layout_row_dynamic(ctx, 300, 2);
                 if (nk_group_begin(ctx, "Group_Without_Border", 0)) {
                     string buffer;
                     nk_layout_row_static(ctx, 18, 150, 1);
                     for (unsigned int i = 0; i < nurbs.control_points.size(); ++i) {
                         SS::Vertex2f p = nurbs.control_points[i];
                         ostringstream string_maker;
-                        string_maker << setfill('0') << setw(3) << i << ": (" 
+                        string_maker << setfill('0') << setw(2) << i << ": (" 
                             << setfill(' ') << setw(4) << (int)p.x << ", " << setw(4) << (int)p.y << ")";
                         buffer = string_maker.str();
                         nk_labelf(ctx, NK_TEXT_LEFT, "%s", buffer.c_str());
                     }
                     nk_group_end(ctx);
                 }
+                if (nk_group_begin(ctx, "Group_Without_Border", NK_WINDOW_BORDER)) {
+                    nk_layout_row(ctx, NK_STATIC, 18, 2, ratio);
+                    for (unsigned int i = 0; i < nurbs.weights.size(); ++i) {
+                        nk_labelf(ctx, NK_TEXT_LEFT, "w: %.1f", nurbs.weights[i]);
+                        nk_slider_float(ctx, 0.0f, &nurbs.weights[i], 10.0f, 1.0f);
+                    }
+                    nk_group_end(ctx);
+                }
+                
+                nk_layout_row_dynamic(ctx, 25, 2);
+                nk_label(ctx, "Parameters", NK_TEXT_CENTERED);
+                nk_label(ctx, "Knots", NK_TEXT_CENTERED);
+
+                nk_layout_row_dynamic(ctx, 300, 2);
                 if (nk_group_begin(ctx, "Group_With_Border", NK_WINDOW_BORDER)) {
                     string buffer;
                     nk_layout_row_dynamic(ctx, 25, 1);
                     for (unsigned int i = 0; i < nurbs.parameters.size(); ++i) {
                         ostringstream string_maker;
-                        string_maker << setw(8) << nurbs.parameters[i];
+                        string_maker << nurbs.parameters[i];
                         buffer = string_maker.str();
                         nk_button_label(ctx, buffer.c_str());
                     }
@@ -211,7 +226,7 @@ menu(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs &nurbs)
                     nk_layout_row_dynamic(ctx, 25, 1);
                     for (unsigned int i = 0; i < nurbs.knots.size(); ++i) {
                         ostringstream string_maker;
-                        string_maker << setw(8) << nurbs.knots[i];
+                        string_maker << nurbs.knots[i];
                         buffer = string_maker.str();
                         nk_button_label(ctx, buffer.c_str());
                     }
