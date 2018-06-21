@@ -65,7 +65,7 @@ void SS::Nurbs::basis_functions(
 }
 
 /* Algorithm A3.1 Compute curve point p.82
- *
+ * Algorithm A4.1 Rational (weight, homogeneous)
  */
 SS::Vertex2f SS::Nurbs::curve_point(
     int index_of_last_internal_knot,
@@ -73,18 +73,23 @@ SS::Vertex2f SS::Nurbs::curve_point(
     vector<float> &knot_vector,
     vector<float> &basis,
     vector<SS::Vertex2f> &control_points,
+    vector<float> &weights,
     float parameter_u)
 {
     int span = find_span(index_of_last_internal_knot, degree, parameter_u, knot_vector);
     basis_functions(span, parameter_u, degree, knot_vector, basis);
     SS::Vertex2f curve_point = { 0.0f, 0.0f };
-    
+    float term_homogeneous = 0.0f;
+
     for(int i = 0; i <= degree; i++)
     {
-        curve_point.x += basis[i] * control_points[span - degree + i].x;
-        curve_point.y += basis[i] * control_points[span - degree + i].y;
+        curve_point.x += basis[i] * control_points[span - degree + i].x * weights[span - degree + i];
+        curve_point.y += basis[i] * control_points[span - degree + i].y * weights[span - degree + i];
+        term_homogeneous +=basis[i] * weights[span - degree + i];
     }
-    
+    curve_point.x /= term_homogeneous;
+    curve_point.y /= term_homogeneous;
+
     return curve_point;
 }
 
@@ -192,9 +197,9 @@ float SS::Knot::averageing(
     }
     knot_value /= degree;  
 
-        if (knot_value > 1.0f) {
-            cout << "OH NO" << endl;
-        }
+    if (knot_value > 1.0f) {
+        cout << "OH NO" << endl;
+    }
     return knot_value;
 }
 vector<float> SS::Nurbs::get_knot_vector(
@@ -238,11 +243,11 @@ int SS::Nurbs::get_curve()
     for(float parameter_u = 0.0f; parameter_u < 1.0f; parameter_u += 0.001f)
     {
         Vertex2f point_on_curve = curve_point(index_of_last_internal_knot, degree, knots, 
-            basis, control_points, parameter_u);
+            basis, control_points, weights, parameter_u);
         curve.push_back(point_on_curve);
     }
         Vertex2f point_on_curve = curve_point(index_of_last_internal_knot, degree, knots, 
-            basis, control_points, 1.0f);
+            basis, control_points, weights, 1.0f);
         curve.push_back(point_on_curve);
 
     return 0;

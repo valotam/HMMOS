@@ -34,6 +34,7 @@ namespace SS
     public:
         unsigned int degree;
         vector<Vertex2f> control_points;
+        vector<float> weights;
         vector<Vertex2f> curve;
         vector<float> knots;
         vector<float> parameters;
@@ -75,7 +76,7 @@ namespace SS
             vector<float> &basis);
 
         /* Algorithm A3.1 Compute curve point p.82
-         *
+         * Algorithm A4.1 Rational (weight, homogeneous)
          */
         Vertex2f curve_point(
             int index_of_last_internal_knot,
@@ -83,6 +84,7 @@ namespace SS
             vector<float> &knot_vector,
             vector<float> &basis,
             vector<Vertex2f> &control_points,
+            vector<float> &weights,
             float parameter_u);
 
         /* Centripetal to get parameter values (U) (Material 7.1 p.19)

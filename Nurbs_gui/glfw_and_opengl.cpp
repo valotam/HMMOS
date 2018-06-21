@@ -77,10 +77,12 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     
     if (is_in_canvas && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         nurbs.control_points.push_back({xpos, ypos});
+        nurbs.weights.push_back(1.0f);
     }
     if (is_in_canvas && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
         if (nurbs.control_points.size() != 0) {
             nurbs.control_points.pop_back();
+            nurbs.weights.pop_back();
         }
     }
 }
