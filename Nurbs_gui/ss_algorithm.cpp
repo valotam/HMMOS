@@ -1,10 +1,4 @@
-#include <cmath>
-#include <vector>
-#include <functional>
-#include <iostream>
-#include <iomanip>
-
-#include "vertex.h"
+#include "ss_algorithm.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -15,7 +9,7 @@ using Knot_Vector_Function = std::function<float(vector<float>&, int, int)>;
 /* Algorithm A2.1 Find span (i) p.68
  *
  */
-int find_span(
+int SS::Nurbs::find_span(
     int index_of_last_internal_knot, 
     int degree, 
     float parameter_u, 
@@ -43,7 +37,7 @@ int find_span(
 /* Algorithm A2.2 Compute basis function (N_i_p) p.70
  *
  */
-void basis_functions(
+void SS::Nurbs::basis_functions(
     int index_basis, 
     float parameter_u,
     int degree, 
@@ -76,7 +70,7 @@ void basis_functions(
 /* Algorithm A3.1 Compute curve point p.82
  *
  */
-SS::Vertex2f curve_point(
+SS::Vertex2f SS::Nurbs::curve_point(
     int index_of_last_internal_knot,
     int degree,
     vector<float> &knot_vector,
@@ -100,7 +94,7 @@ SS::Vertex2f curve_point(
 /* Centripetal to get parameter values (U) (Material 7.1 p.19)
  * (Equally spaced)/(chord length)/(centripetal)
  */
-SS::Vertex2f get_delta(
+SS::Vertex2f SS::Nurbs::get_delta(
     SS::Vertex2f &vertex_initial, 
     SS::Vertex2f &vertex_final)
 {
@@ -109,7 +103,16 @@ SS::Vertex2f get_delta(
     SS::Vertex2f delta = { delta_x, delta_y };
     return delta;
 }
-static float equally_spaced(
+SS::Vertex2f SS::Para::get_delta(
+    SS::Vertex2f &vertex_initial, 
+    SS::Vertex2f &vertex_final)
+{
+    float delta_x = vertex_final.x - vertex_initial.x;
+    float delta_y = vertex_final.y - vertex_initial.y;
+    SS::Vertex2f delta = { delta_x, delta_y };
+    return delta;
+}
+float SS::Para::equally_spaced(
     SS::Vertex2f &vertex_initial, 
     SS::Vertex2f &vertex_final, 
     float total_chord_length, 
@@ -118,7 +121,7 @@ static float equally_spaced(
     float result = 1.0f / (num_of_parameters - 1);
     return result;
 }
-static float chord_length(
+float SS::Para::chord_length(
     SS::Vertex2f &vertex_initial, 
     SS::Vertex2f &vertex_final, 
     float total_chord_length, 
@@ -131,7 +134,7 @@ static float chord_length(
 
     return result;
 }
-static float centripetal(
+float SS::Para::centripetal(
     SS::Vertex2f &vertex_initial, 
     SS::Vertex2f &vertex_final, 
     float total_chord_length, 
@@ -144,7 +147,7 @@ static float centripetal(
 
     return result;
 }
-vector<float> parameter_values(
+vector<float> SS::Nurbs::parameter_values(
     vector<SS::Vertex2f> &control_points, 
     Parameter_Function parameter_function)
 {
@@ -175,7 +178,7 @@ vector<float> parameter_values(
 /* Knot Vector (Material 7.1 p.22)
  * (Equal spaing)/(Averaging)
  */
-static float equal_spacing(
+float SS::Knot::equal_spacing(
     vector<float> &parameters_U, 
     int degree, 
     int index_k)
@@ -183,7 +186,7 @@ static float equal_spacing(
     float knot_value = (float)(index_k-degree)/(parameters_U.size()- degree);
     return knot_value;
 }
-static float averageing(
+float SS::Knot::averageing(
     vector<float> &parameters_U, 
     int degree, 
     int index_k)
@@ -197,7 +200,7 @@ static float averageing(
 
     return knot_value;
 }
-vector<float> get_knot_vector(
+vector<float> SS::Nurbs::get_knot_vector(
     vector<float> &parameters_U, 
     int degree, 
     Knot_Vector_Function knot_function)
@@ -221,35 +224,25 @@ vector<float> get_knot_vector(
     return results;
 }
 
-int main(int argc, char const *argv[])
+/* Calculate curve points
+    *
+    */
+int SS::Nurbs::get_curve(Parameter_Function para_func, Knot_Vector_Function knot_func)
 {
-    int degree = 2;
-    vector<SS::Vertex2f> control_points = {
-        {0.0f, 0.0f},
-        {1.0f, 0.0f},
-        {2.0f, 0.0f},
-        {3.0f, 0.0f},
-        {4.0f, 0.0f}
-    };
+    curve.clear();
+    curve.shrink_to_fit();
 
-    vector<float> u = parameter_values(control_points, equally_spaced);
-    vector<float> v = parameter_values(control_points, chord_length);
-    vector<float> w = parameter_values(control_points, centripetal);
-
-    vector<float> knots = get_knot_vector(u, degree, equal_spacing);
-    vector<float> knots2 = get_knot_vector(u, degree, averageing);
+    vector<float> parameters = parameter_values(control_points, para_func);
+    vector<float> knots = get_knot_vector(parameters, degree, knot_func);
 
     int index_of_last_internal_knot = knots.size() - 1 - degree - 1;
     vector<float> basis(degree + 1);
 
-
-
     for(double parameter_u = 0.0; parameter_u <= 1.0; parameter_u += 0.1)
     {
-        SS::Vertex2f point_on_curve = curve_point(index_of_last_internal_knot, degree, knots, 
+        Vertex2f point_on_curve = curve_point(index_of_last_internal_knot, degree, knots, 
             basis, control_points, parameter_u);
-        cout << fixed << setprecision(3)
-            << point_on_curve.x << " " << point_on_curve.y << endl;
+        curve.push_back(point_on_curve);
     }
 
     return 0;
