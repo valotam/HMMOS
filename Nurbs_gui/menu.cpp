@@ -136,26 +136,56 @@ menu(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs &nurbs)
                 nk_layout_row_dynamic(ctx, 30, 2);
                 option_to_knot = nk_option_label(ctx, "Averaging", option_to_knot == Averaging) ? Averaging : option_to_knot;
                 option_to_knot = nk_option_label(ctx, "Equally Spaced", option_to_knot == Equally_Spacing) ? Equally_Spacing : option_to_knot;
-
+               
                 nk_layout_row(ctx, NK_STATIC, 30, 2, ratio);
                 nk_labelf(ctx, NK_TEXT_LEFT, "Slider t: %.2f", float_slider);
                 nk_slider_float(ctx, 0.0f, &float_slider, 1.0f, 0.01f);
 
+                nurbs.degree = property_degree;
+
+                if (option_to_para == Centripetal) {
+                    nurbs.set_parameter_function(SS::Para::centripetal);
+                }
+                else if (option_to_para == Chord_Length) {
+                    nurbs.set_parameter_function(SS::Para::chord_length);
+                }
+                else if (option_to_para == Equally_Spaced) {
+                    nurbs.set_parameter_function(SS::Para::equally_spaced);
+                }
+                if (option_to_knot == Averaging) {
+                    nurbs.set_knot_vector_function(SS::Knot::averageing);
+                }
+                else if (option_to_knot == Equally_Spacing) {
+                    nurbs.set_knot_vector_function(SS::Knot::equal_spacing);
+                }
+
+                if (nurbs.control_points.size() > nurbs.degree) {
+                    nurbs.get_curve();
+                }
+                else
+                {
+                    nurbs.clear_curve();
+                }
+                
+                
                 nk_tree_pop(ctx);
             }
 
+
+
+
             if (nk_tree_push(ctx, NK_TREE_NODE, "Status", NK_MAXIMIZED))
             {
-                nk_layout_row_dynamic(ctx, 25, 2);
+                nk_layout_row_dynamic(ctx, 25, 3);
                 nk_label(ctx, "Control Points (X, Y)", NK_TEXT_CENTERED);
+                nk_label(ctx, "Parameters", NK_TEXT_CENTERED);
                 nk_label(ctx, "Knots", NK_TEXT_CENTERED);
 
-                nk_layout_row_dynamic(ctx, 300, 2);
+                nk_layout_row_dynamic(ctx, 300, 3);
                 if (nk_group_begin(ctx, "Group_Without_Border", 0)) {
-                    int i = 0;
                     string buffer;
                     nk_layout_row_static(ctx, 18, 150, 1);
-                    for (i = 0; i < nurbs.control_points.size(); ++i) {
+                    for (unsigned int i = 0; i < nurbs.control_points.size(); ++i) {
                         SS::Vertex2f p = nurbs.control_points[i];
                         ostringstream string_maker;
                         string_maker << setfill('0') << setw(3) << i << ": (" 
@@ -166,12 +196,22 @@ menu(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs &nurbs)
                     nk_group_end(ctx);
                 }
                 if (nk_group_begin(ctx, "Group_With_Border", NK_WINDOW_BORDER)) {
-                    int i = 0;
                     string buffer;
-                    nk_layout_row_dynamic(ctx, 25, 2);
-                    for (i = 0; i < 64; ++i) {
+                    nk_layout_row_dynamic(ctx, 25, 1);
+                    for (unsigned int i = 0; i < nurbs.parameters.size(); ++i) {
                         ostringstream string_maker;
-                        string_maker << setfill('0') << setw(8) << ((((i%7)*10)^32))+(64+(i%2)*2);
+                        string_maker << setw(8) << nurbs.parameters[i];
+                        buffer = string_maker.str();
+                        nk_button_label(ctx, buffer.c_str());
+                    }
+                    nk_group_end(ctx);
+                }
+                if (nk_group_begin(ctx, "Group_With_Border", NK_WINDOW_BORDER)) {
+                    string buffer;
+                    nk_layout_row_dynamic(ctx, 25, 1);
+                    for (unsigned int i = 0; i < nurbs.knots.size(); ++i) {
+                        ostringstream string_maker;
+                        string_maker << setw(8) << nurbs.knots[i];
                         buffer = string_maker.str();
                         nk_button_label(ctx, buffer.c_str());
                     }

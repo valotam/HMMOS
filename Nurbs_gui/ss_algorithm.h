@@ -28,21 +28,32 @@ namespace SS
     class Nurbs
     {
     private:
+        Parameter_Function parameter_function;
+        Knot_Vector_Function knot_vector_function;
 
     public:
         unsigned int degree;
         vector<Vertex2f> control_points;
         vector<Vertex2f> curve;
+        vector<float> knots;
+        vector<float> parameters;
 
     public:
         Nurbs() : degree(0) { }
         ~Nurbs() { }
+
+        void clear_curve();
+
+        /* Set parameter function and knot vector function
+         *
+         */
+        void set_parameter_function(Parameter_Function para_func);
+        void set_knot_vector_function(Knot_Vector_Function knot_func);
+
         /* Calculate curve points
          *
          */
-        int get_curve(
-            Parameter_Function para_func, 
-            Knot_Vector_Function knot_func);
+        int get_curve();
 
     private:
         /* Algorithm A2.1 Find span (i) p.68
@@ -81,17 +92,14 @@ namespace SS
             Vertex2f &vertex_initial, 
             Vertex2f &vertex_final);
 
-        vector<float> parameter_values(
-            vector<Vertex2f> &control_points, 
-            Parameter_Function parameter_function);
+        vector<float> parameter_values(vector<Vertex2f> &control_points);
 
         /* Knot Vector (Material 7.1 p.22)
          * (Equal spaing)/(Averaging)
          */
         vector<float> get_knot_vector(
             vector<float> &parameters_U, 
-            int degree, 
-            Knot_Vector_Function knot_function);
+            int degree);
 
     };
 

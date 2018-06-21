@@ -92,17 +92,13 @@ canvas(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs &nurbs)
                 }
             }
             
-            if (size >= 4) {
-                nurbs.degree = 2;
-                nurbs.get_curve(SS::Para::centripetal, SS::Knot::averageing);
-                size = nurbs.curve.size();
-                for(unsigned int i = 0; i < size; i++)
-                {
-                    SS::Vertex2f cp = nurbs.curve.at(i);
-                    if (i < size - 1) {
-                        SS::Vertex2f cp2 = nurbs.curve.at(i + 1);
-                        nk_stroke_line(canvas.painter, cp.x, cp.y, cp2.x, cp2.y, 2.0f, color);
-                    }
+            size = nurbs.curve.size();
+            for(unsigned int i = 0; i < size; i++)
+            {
+                SS::Vertex2f cp = nurbs.curve.at(i);
+                if (i < size - 1) {
+                    SS::Vertex2f cp2 = nurbs.curve.at(i + 1);
+                    nk_stroke_line(canvas.painter, cp.x, cp.y, cp2.x, cp2.y, 2.0f, color);
                 }
             }
         }

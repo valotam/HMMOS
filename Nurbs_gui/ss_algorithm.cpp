@@ -144,13 +144,10 @@ float SS::Para::centripetal(
 
     return result;
 }
-vector<float> SS::Nurbs::parameter_values(
-    vector<SS::Vertex2f> &control_points, 
-    Parameter_Function parameter_function)
+vector<float> SS::Nurbs::parameter_values(vector<SS::Vertex2f> &control_points)
 {
     int size = control_points.size();
     vector<float> results(size);
-    parameter_function = bind(parameter_function, _1, _2, _3, _4);
 
     float total_chord_length = 0;
     for(int i = 1; i < size; i++)
@@ -189,23 +186,29 @@ float SS::Knot::averageing(
     int index_k)
 {
     float knot_value = 0;
-    for(int i = index_k; i <= index_k + degree - 1; i++)
+    for(int i = index_k - degree; i <= index_k - 1; i++)
     {
         knot_value += parameters_U[i];
     }
-    knot_value /= degree;
+    knot_value /= degree;  
 
+        if (knot_value > 1.0f) {
+            cout << "OH NO" << endl;
+        }
     return knot_value;
 }
 vector<float> SS::Nurbs::get_knot_vector(
     vector<float> &parameters_U, 
-    int degree, 
-    Knot_Vector_Function knot_function)
+    int degree)
 {
     const int num_of_control_points = parameters_U.size();
     const int num_of_knots = num_of_control_points + degree + 1;
     vector<float> results(num_of_knots);
-    knot_function = bind(knot_function, _1, _2, _3);
+
+    for(int k = 1+degree; k <= num_of_control_points - 1; k++)
+    {
+        results[k] = knot_vector_function(parameters_U, degree, k);
+    }
 
     for(int i = 0; i <= degree; i++)
     {
@@ -213,10 +216,7 @@ vector<float> SS::Nurbs::get_knot_vector(
         results[num_of_knots - 1 - i] = 1.0f;
     }
     
-    for(int k = 1+degree; k <= num_of_control_points - 1; k++)
-    {
-        results[k] = knot_function(parameters_U, degree, k);
-    }
+
     
     return results;
 }
@@ -224,13 +224,13 @@ vector<float> SS::Nurbs::get_knot_vector(
 /* Calculate curve points
     *
     */
-int SS::Nurbs::get_curve(Parameter_Function para_func, Knot_Vector_Function knot_func)
+int SS::Nurbs::get_curve()
 {
     curve.clear();
     curve.shrink_to_fit();
 
-    vector<float> parameters = parameter_values(control_points, para_func);
-    vector<float> knots = get_knot_vector(parameters, degree, knot_func);
+    parameters = parameter_values(control_points);
+    knots = get_knot_vector(parameters, degree);
     
     int index_of_last_internal_knot = knots.size() - 1 - degree - 1;
     vector<float> basis(degree + 1);
@@ -246,4 +246,24 @@ int SS::Nurbs::get_curve(Parameter_Function para_func, Knot_Vector_Function knot
         curve.push_back(point_on_curve);
 
     return 0;
+}
+
+void SS::Nurbs::set_parameter_function(Parameter_Function para_func)
+{
+    parameter_function = bind(para_func, _1, _2, _3, _4);
+}
+
+void SS::Nurbs::set_knot_vector_function(Knot_Vector_Function knot_func)
+{
+    knot_vector_function = bind(knot_func, _1, _2, _3);
+}
+
+void SS::Nurbs::clear_curve()
+{
+    curve.clear();
+    curve.shrink_to_fit();
+    knots.clear();
+    knots.shrink_to_fit();
+    parameters.clear();
+    parameters.shrink_to_fit();
 }
