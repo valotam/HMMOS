@@ -1,5 +1,5 @@
 static int
-menu(struct nk_context *ctx, int win_width, int win_height)
+menu(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs &nurbs)
 {
     /* window flags */
     static int show_menu = nk_true;
@@ -147,7 +147,7 @@ menu(struct nk_context *ctx, int win_width, int win_height)
             if (nk_tree_push(ctx, NK_TREE_NODE, "Status", NK_MAXIMIZED))
             {
                 nk_layout_row_dynamic(ctx, 25, 2);
-                nk_label(ctx, "Control Points", NK_TEXT_CENTERED);
+                nk_label(ctx, "Control Points (X, Y)", NK_TEXT_CENTERED);
                 nk_label(ctx, "Knots", NK_TEXT_CENTERED);
 
                 nk_layout_row_dynamic(ctx, 300, 2);
@@ -155,11 +155,13 @@ menu(struct nk_context *ctx, int win_width, int win_height)
                     int i = 0;
                     string buffer;
                     nk_layout_row_static(ctx, 18, 150, 1);
-                    for (i = 0; i < 64; ++i) {
+                    for (i = 0; i < nurbs.control_points.size(); ++i) {
+                        SS::Vertex2f p = nurbs.control_points[i];
                         ostringstream string_maker;
-                        string_maker << "0x" << setfill('0') << setw(2) << hex << i;
+                        string_maker << setfill('0') << setw(3) << i << ": (" 
+                            << setfill(' ') << setw(4) << (int)p.x << ", " << setw(4) << (int)p.y << ")";
                         buffer = string_maker.str();
-                        nk_labelf(ctx, NK_TEXT_LEFT, "%s: scrollable region", buffer.c_str());
+                        nk_labelf(ctx, NK_TEXT_LEFT, "%s", buffer.c_str());
                     }
                     nk_group_end(ctx);
                 }

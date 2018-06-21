@@ -71,13 +71,12 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
     bool is_in_canvas = false;
 
-    if (xpos > 420) {
+    if (xpos > 420 && ypos > 40) {
         is_in_canvas = true;
     }
     
     if (is_in_canvas && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         nurbs.control_points.push_back({xpos, ypos});
-        cout << xpos << " " << ypos << endl;
     }
     if (is_in_canvas && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
         if (nurbs.control_points.size() != 0) {
@@ -147,7 +146,7 @@ int main(void)
 
         /* ------------------ GUI ------------------ */
         #ifdef INCLUDE_MENU
-            menu(ctx, width, height);
+            menu(ctx, width, height, nurbs);
         #endif
         #ifdef INCLUDE_CANVAS
             canvas(ctx, width, height, nurbs);

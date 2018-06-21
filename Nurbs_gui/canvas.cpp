@@ -52,7 +52,7 @@ canvas_end(struct nk_context *ctx, struct nk_canvas *canvas)
 }
 
 static int
-canvas(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs nurbs)
+canvas(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs &nurbs)
 {
     /* window flags */
     static int border = nk_true;
