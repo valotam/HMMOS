@@ -26,7 +26,7 @@
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
 
-#include "vertex.h"
+#include "ss_algorithm.h"
 
 using namespace std;
 
@@ -55,7 +55,7 @@ using namespace std;
  *                          Vertices
  *
  * ===============================================================*/
-vector<SS::Vertex2f> control_points;
+SS::Nurbs nurbs;
 
 /* ===============================================================
  *
@@ -77,12 +77,12 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
     
     if (is_in_canvas && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-        control_points.push_back({xpos, ypos});
+        nurbs.control_points.push_back({xpos, ypos});
         cout << xpos << " " << ypos << endl;
     }
     if (is_in_canvas && button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-        if (control_points.size() != 0) {
-            control_points.pop_back();
+        if (nurbs.control_points.size() != 0) {
+            nurbs.control_points.pop_back();
         }
     }
 }
@@ -151,7 +151,7 @@ int main(void)
             menu(ctx, width, height);
         #endif
         #ifdef INCLUDE_CANVAS
-            canvas(ctx, width, height);
+            canvas(ctx, width, height, nurbs);
         #endif
         /* ----------------------------------------- */
 

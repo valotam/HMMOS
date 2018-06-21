@@ -2,6 +2,23 @@
     "files.associations": {
         "thread": "cpp",
         "iostream": "cpp",
-        "initializer_list": "cpp"
+        "initializer_list": "cpp",
+        "chrono": "cpp",
+        "cctype": "cpp",
+        "cmath": "cpp",
+        "cstdarg": "cpp",
+        "cstddef": "cpp",
+        "cstdio": "cpp",
+        "cstdlib": "cpp",
+        "cstring": "cpp",
+        "ctime": "cpp",
+        "cwchar": "cpp",
+        "atomic": "cpp",
+        "strstream": "cpp",
+        "cstdint": "cpp",
+        "iosfwd": "cpp",
+        "ratio": "cpp",
+        "cinttypes": "cpp",
+        "typeindex": "cpp"
     }
 }

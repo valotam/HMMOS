@@ -44,7 +44,8 @@
                 "-lGLU",
                 "-lGLEW",
                 "-o",
-                "${fileDirname}/bin/${fileBasenameNoExtension}"
+                "${fileDirname}/bin/${fileBasenameNoExtension}",
+                "${fileDirname}/ss_algorithm.cpp"
             ],
             "group": {
                 "kind": "build",

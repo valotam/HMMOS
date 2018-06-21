@@ -1,4 +1,5 @@
 #ifndef _SS_VETEX_H_
+#define _SS_VETEX_H_
 namespace SS
 {
     struct Vertex2f
@@ -9,6 +10,7 @@ namespace SS
 #endif
 
 #ifndef _SS_ALGORITHM_H_
+#define _SS_ALGORITHM_H_
 
 #include <cmath>
 #include <vector>
@@ -25,6 +27,8 @@ namespace SS
     
     class Nurbs
     {
+    private:
+
     public:
         unsigned int degree;
         vector<Vertex2f> control_points;
@@ -99,12 +103,9 @@ namespace SS
             Vertex2f &vertex_final);
 
     public:
-        Para() { }
-        ~Para() { }
         /* Centripetal to get parameter values (U) (Material 7.1 p.19)
          * (Equally spaced)/(chord length)/(centripetal)
          */
-
         static float equally_spaced(
             Vertex2f &vertex_initial, 
             Vertex2f &vertex_final, 
@@ -129,8 +130,6 @@ namespace SS
     class Knot
     {
     public:
-        Knot() { }
-        ~Knot() { }
         /* Knot Vector (Material 7.1 p.22)
          * (Equal spaing)/(Averaging)
          */

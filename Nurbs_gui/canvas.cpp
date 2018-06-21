@@ -52,7 +52,7 @@ canvas_end(struct nk_context *ctx, struct nk_canvas *canvas)
 }
 
 static int
-canvas(struct nk_context *ctx, int win_width, int win_height)
+canvas(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs nurbs)
 {
     /* window flags */
     static int border = nk_true;
@@ -79,17 +79,34 @@ canvas(struct nk_context *ctx, int win_width, int win_height)
     if (canvas_begin(ctx, &canvas, "Canvas", nk_rect(start, 0, win_width-start, win_height), window_flags, nk_white))
     {
         const struct nk_color color = nk_default_color_style[NK_COLOR_CHART_COLOR];
-        {float points[12];
-        points[0] = 200 + start; points[1] = 250;
-        points[2] = 250 + start; points[3] = 350;
-        points[4] = 225 + start; points[5] = 350;
-        points[6] = 200 + start; points[7] = 300;
-        points[8] = 175 + start; points[9] = 350;
-        points[10] = 150 + start; points[11] = 350;
-        nk_fill_polygon(canvas.painter, points, 6, color);}
-
-        nk_stroke_line(canvas.painter, 15 + 250, 100, 500, 10, 2.0f, color);
-        // nk_stroke_circle(canvas.painter, nk_rect(20, 370, 100, 100), 5, nk_rgb(0,255,120));
+        unsigned int size = nurbs.control_points.size();
+        if (size != 0) {
+            for(unsigned int i = 0; i < size; i++)
+            {
+                SS::Vertex2f cp = nurbs.control_points.at(i);
+                nk_stroke_circle(canvas.painter, nk_rect(cp.x - 2, cp.y - 2, 5, 5), 5, nk_rgb(0,255,120));
+                
+                if (i < size - 1) {
+                    SS::Vertex2f cp2 = nurbs.control_points.at(i + 1);
+                    nk_stroke_line(canvas.painter, cp.x, cp.y, cp2.x, cp2.y, 2.0f, color);
+                }
+            }
+            
+            if (size >= 4) {
+                nurbs.degree = 2;
+                nurbs.get_curve(SS::Para::centripetal, SS::Knot::equal_spacing);
+                size = nurbs.curve.size();
+                for(unsigned int i = 0; i < size; i++)
+                {
+                    SS::Vertex2f cp = nurbs.curve.at(i);
+                    if (i < size - 1) {
+                        SS::Vertex2f cp2 = nurbs.curve.at(i + 1);
+                        nk_stroke_line(canvas.painter, cp.x, cp.y, cp2.x, cp2.y, 2.0f, color);
+                    }
+                }
+            }
+        }
+        
     }
     canvas_end(ctx, &canvas);}
     return !nk_window_is_closed(ctx, "Canvas");

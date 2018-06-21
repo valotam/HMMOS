@@ -2,9 +2,6 @@
 
 using namespace std;
 using namespace std::placeholders;
-using Parameter_Function = std::function<float(SS::Vertex2f&, SS::Vertex2f&, float, int)>;
-using Knot_Vector_Function = std::function<float(vector<float>&, int, int)>;
-
 
 /* Algorithm A2.1 Find span (i) p.68
  *
@@ -85,7 +82,7 @@ SS::Vertex2f SS::Nurbs::curve_point(
     for(int i = 0; i <= degree; i++)
     {
         curve_point.x += basis[i] * control_points[span - degree + i].x;
-        curve_point.y += basis[i] * control_points[span - degree + i].x;
+        curve_point.y += basis[i] * control_points[span - degree + i].y;
     }
     
     return curve_point;
@@ -234,16 +231,19 @@ int SS::Nurbs::get_curve(Parameter_Function para_func, Knot_Vector_Function knot
 
     vector<float> parameters = parameter_values(control_points, para_func);
     vector<float> knots = get_knot_vector(parameters, degree, knot_func);
-
+    
     int index_of_last_internal_knot = knots.size() - 1 - degree - 1;
     vector<float> basis(degree + 1);
 
-    for(double parameter_u = 0.0; parameter_u <= 1.0; parameter_u += 0.1)
+    for(float parameter_u = 0.0f; parameter_u < 1.0f; parameter_u += 0.01f)
     {
         Vertex2f point_on_curve = curve_point(index_of_last_internal_knot, degree, knots, 
             basis, control_points, parameter_u);
         curve.push_back(point_on_curve);
     }
+        Vertex2f point_on_curve = curve_point(index_of_last_internal_knot, degree, knots, 
+            basis, control_points, 1.0f);
+        curve.push_back(point_on_curve);
 
     return 0;
 }
