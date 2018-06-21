@@ -235,7 +235,7 @@ int SS::Nurbs::get_curve(Parameter_Function para_func, Knot_Vector_Function knot
     int index_of_last_internal_knot = knots.size() - 1 - degree - 1;
     vector<float> basis(degree + 1);
 
-    for(float parameter_u = 0.0f; parameter_u < 1.0f; parameter_u += 0.01f)
+    for(float parameter_u = 0.0f; parameter_u < 1.0f; parameter_u += 0.001f)
     {
         Vertex2f point_on_curve = curve_point(index_of_last_internal_knot, degree, knots, 
             basis, control_points, parameter_u);

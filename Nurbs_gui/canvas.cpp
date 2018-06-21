@@ -75,7 +75,7 @@ canvas(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs nurbs)
 
     /* draw */
     {struct nk_canvas canvas;
-    int start = 400;
+    int start = 420;
     if (canvas_begin(ctx, &canvas, "Canvas", nk_rect(start, 0, win_width-start, win_height), window_flags, nk_white))
     {
         const struct nk_color color = nk_default_color_style[NK_COLOR_CHART_COLOR];
@@ -88,13 +88,13 @@ canvas(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs nurbs)
                 
                 if (i < size - 1) {
                     SS::Vertex2f cp2 = nurbs.control_points.at(i + 1);
-                    nk_stroke_line(canvas.painter, cp.x, cp.y, cp2.x, cp2.y, 2.0f, color);
+                    nk_stroke_line(canvas.painter, cp.x, cp.y, cp2.x, cp2.y, 2.0f, nk_blue);
                 }
             }
             
             if (size >= 4) {
                 nurbs.degree = 2;
-                nurbs.get_curve(SS::Para::centripetal, SS::Knot::equal_spacing);
+                nurbs.get_curve(SS::Para::centripetal, SS::Knot::averageing);
                 size = nurbs.curve.size();
                 for(unsigned int i = 0; i < size; i++)
                 {

@@ -26,9 +26,15 @@
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_ELEMENT_BUFFER 128 * 1024
 
-#include "ss_algorithm.h"
-
 using namespace std;
+
+/* ===============================================================
+ *
+ *                          Vertices
+ *
+ * ===============================================================*/
+#include "ss_algorithm.h"
+SS::Nurbs nurbs;
 
 /* ===============================================================
  *
@@ -52,13 +58,6 @@ using namespace std;
 
 /* ===============================================================
  *
- *                          Vertices
- *
- * ===============================================================*/
-SS::Nurbs nurbs;
-
-/* ===============================================================
- *
  *                      Callback Functions
  *
  * ===============================================================*/
@@ -72,7 +71,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
     bool is_in_canvas = false;
 
-    if (xpos > 400) {
+    if (xpos > 420) {
         is_in_canvas = true;
     }
     
