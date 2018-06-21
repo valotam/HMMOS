@@ -2,6 +2,7 @@
 #include <vector>
 #include <functional>
 #include <iostream>
+#include <iomanip>
 
 #include "vertex.h"
 
@@ -23,7 +24,7 @@ int find_span(
     if (parameter_u == knot_vector[degree])
         return degree;
     if (parameter_u == knot_vector[index_of_last_internal_knot + 1])
-        return index_of_last_internal_knot + 1;
+        return index_of_last_internal_knot;
 
     int low = degree;
     int high = index_of_last_internal_knot + 1;
@@ -50,24 +51,25 @@ void basis_functions(
     vector<float> &basis)
 {
     basis[0] = 1.0f;
-    vector<float> left(degree + 1);
-    vector<float> right(degree  + 1);
+    vector<float> left_numerator(degree);
+    vector<float> right_numerator(degree);
 
-    for(int j = 1; j <= degree; j++)
+    for(int j = 0; j < degree; j++)
     {
-        left[j] = parameter_u - knot_vector[index_basis + 1 - j];
-        right[j] = knot_vector[index_basis + j] - parameter_u;
+        left_numerator[j] = parameter_u - knot_vector[index_basis - j];
+        right_numerator[j] = knot_vector[index_basis + j + 1] - parameter_u;
 
-        float saved = 0.0f;
+        float first_term = 0.0f;
 
-        for(int r = 0; r < j; r++)
+        for(int r = 0; r < j + 1; r++)
         {
-            float temp = basis[r] / (right[r + 1] + left[j - r]);
-            basis[r] = saved + right[r + 1] * temp;
-            saved = left[j - r] * temp;
+            float last_term_denominator = right_numerator[r] + left_numerator[j - r];
+            float temp = basis[r] / last_term_denominator;
+            basis[r] = first_term + right_numerator[r] * temp;
+            first_term = left_numerator[j - r] * temp;
         }
         
-        basis[j] = saved;
+        basis[j + 1] = first_term;
     }
 }
 
@@ -221,7 +223,6 @@ vector<float> get_knot_vector(
 
 int main(int argc, char const *argv[])
 {
-    float parameter_u = 1.0f;
     int degree = 2;
     vector<SS::Vertex2f> control_points = {
         {0.0f, 0.0f},
@@ -241,12 +242,15 @@ int main(int argc, char const *argv[])
     int index_of_last_internal_knot = knots.size() - 1 - degree - 1;
     vector<float> basis(degree + 1);
 
-    SS::Vertex2f point_on_curve = curve_point(index_of_last_internal_knot, degree, knots, 
-        basis, control_points, parameter_u);
 
 
-    vector<float> knots3 = get_knot_vector(u, degree, equal_spacing);
+    for(double parameter_u = 0.0; parameter_u <= 1.0; parameter_u += 0.1)
+    {
+        SS::Vertex2f point_on_curve = curve_point(index_of_last_internal_knot, degree, knots, 
+            basis, control_points, parameter_u);
+        cout << fixed << setprecision(3)
+            << point_on_curve.x << " " << point_on_curve.y << endl;
+    }
 
-    cout << point_on_curve.x << " " << point_on_curve.y << endl;
     return 0;
 }
