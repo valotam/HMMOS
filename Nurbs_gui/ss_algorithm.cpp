@@ -240,14 +240,14 @@ int SS::Nurbs::get_curve()
     int index_of_last_internal_knot = knots.size() - 1 - degree - 1;
     vector<float> basis(degree + 1);
 
-    for(float parameter_u = 0.0f; parameter_u < 1.0f; parameter_u += 0.001f)
+    for(float parameter_u = 0.0f; parameter_u < parameter_u_limit; parameter_u += 0.001f)
     {
         Vertex2f point_on_curve = curve_point(index_of_last_internal_knot, degree, knots, 
             basis, control_points, weights, parameter_u);
         curve.push_back(point_on_curve);
     }
         Vertex2f point_on_curve = curve_point(index_of_last_internal_knot, degree, knots, 
-            basis, control_points, weights, 1.0f);
+            basis, control_points, weights, parameter_u_limit);
         curve.push_back(point_on_curve);
 
     return 0;

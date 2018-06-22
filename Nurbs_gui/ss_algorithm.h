@@ -38,9 +38,10 @@ namespace SS
         vector<Vertex2f> curve;
         vector<float> knots;
         vector<float> parameters;
+        float parameter_u_limit;
 
     public:
-        Nurbs() : degree(0) { }
+        Nurbs() : degree(0), parameter_u_limit(1.0f) { }
         ~Nurbs() { }
 
         void clear_curve();

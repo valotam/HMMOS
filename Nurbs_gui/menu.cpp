@@ -101,6 +101,7 @@ menu(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs &nurbs)
             nk_label(ctx, "equally spaced parametrization.", NK_TEXT_LEFT);
             nk_label(ctx, "2. Select knots and make a knot vector", NK_TEXT_LEFT);
             nk_label(ctx, "-You can choose equally spaced, or averaging knots.", NK_TEXT_LEFT);
+            nk_label(ctx, "3. Tune weights of control points.", NK_TEXT_LEFT);
             nk_label(ctx, "", NK_TEXT_LEFT);
 
             nk_tree_pop(ctx);
@@ -108,7 +109,7 @@ menu(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs &nurbs)
 
         if (nk_tree_push(ctx, NK_TREE_TAB, "Widget", NK_MAXIMIZED))
         {
-            enum options_to_parameter { Centripetal, Chord_Length, Equally_Spaced };
+            enum options_to_parameter { Chord_Length, Centripetal, Equally_Spaced };
             enum options_to_knot { Averaging, Equally_Spacing };
 
             static int option_to_para;
@@ -118,7 +119,6 @@ menu(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs &nurbs)
             {
                 /* Basic widgets */
                 static const float ratio[] = {120, 150};
-                static float float_slider = 1.0f;
                 static int property_degree = 2;
 
                 nk_layout_row(ctx, NK_STATIC, 25, 2, ratio);
@@ -128,8 +128,8 @@ menu(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs &nurbs)
                 nk_layout_row_dynamic(ctx, 20, 1);
                 nk_label(ctx, "Prametrization", NK_TEXT_LEFT);
                 nk_layout_row_dynamic(ctx, 30, 3);
-                option_to_para = nk_option_label(ctx, "Centripetal", option_to_para == Centripetal) ? Centripetal : option_to_para;
                 option_to_para = nk_option_label(ctx, "Chord Length", option_to_para == Chord_Length) ? Chord_Length : option_to_para;
+                option_to_para = nk_option_label(ctx, "Centripetal", option_to_para == Centripetal) ? Centripetal : option_to_para;
                 option_to_para = nk_option_label(ctx, "Equally Spaced", option_to_para == Equally_Spaced) ? Equally_Spaced : option_to_para;
                 nk_layout_row_dynamic(ctx, 20, 1);
                 nk_label(ctx, "Knot vector", NK_TEXT_LEFT);
@@ -138,8 +138,8 @@ menu(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs &nurbs)
                 option_to_knot = nk_option_label(ctx, "Equally Spaced", option_to_knot == Equally_Spacing) ? Equally_Spacing : option_to_knot;
                
                 nk_layout_row(ctx, NK_STATIC, 30, 2, ratio);
-                nk_labelf(ctx, NK_TEXT_LEFT, "Slider t: %.2f", float_slider);
-                nk_slider_float(ctx, 0.0f, &float_slider, 1.0f, 0.01f);
+                nk_labelf(ctx, NK_TEXT_LEFT, "Slider t: %.2f", nurbs.parameter_u_limit);
+                nk_slider_float(ctx, 0.0f, &nurbs.parameter_u_limit, 1.0f, 0.01f);
 
                 nurbs.degree = property_degree;
 
@@ -182,7 +182,7 @@ menu(struct nk_context *ctx, int win_width, int win_height, SS::Nurbs &nurbs)
                 nk_label(ctx, "Parameters", NK_TEXT_CENTERED);
                 nk_label(ctx, "Knots", NK_TEXT_CENTERED);
 
-                nk_layout_row_dynamic(ctx, 100, 2);
+                nk_layout_row_dynamic(ctx, 300, 2);
                 if (nk_group_begin(ctx, "Group_With_BorderA", NK_WINDOW_BORDER)) {
                     string buffer;
                     nk_layout_row_dynamic(ctx, 25, 1);
